@@ -341,105 +341,109 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Función para generar el mapa conceptual
     function generarMapa(filosofia) {
-        // Limpiar el contenedor
+        // Clear previous content
         mapaContainer.innerHTML = '';
         mapaContainer.classList.remove('hidden');
         
-        // Crear el título y descripción
-        const titulo = document.createElement('h2');
-        titulo.textContent = filosofia.concepto;
-        titulo.className = 'mapa-titulo';
-        mapaContainer.appendChild(titulo);
+        // Create header and description
+        const header = document.createElement('h2');
+        header.className = 'mapa-titulo';
+        header.textContent = filosofia.concepto;
         
         const descripcion = document.createElement('p');
-        descripcion.textContent = filosofia.descripcion;
         descripcion.className = 'mapa-descripcion';
-        mapaContainer.appendChild(descripcion);
+        descripcion.textContent = filosofia.descripcion;
         
-        // Crear el canvas para el mapa
-        const mapaCanvas = document.createElement('div');
-        mapaCanvas.className = 'mapa-canvas';
-        mapaContainer.appendChild(mapaCanvas);
+        // Create canvas for the concept map
+        const canvas = document.createElement('div');
+        canvas.className = 'mapa-canvas';
+        canvas.id = 'mapa-canvas';
         
-        // Crear el nodo central
-        const nodoCentral = document.createElement('div');
-        nodoCentral.className = 'nodo nodo-central';
-        nodoCentral.textContent = filosofia.concepto;
-        nodoCentral.style.left = '250px';
-        nodoCentral.style.top = '30px';
-        nodoCentral.style.width = '180px';
-        nodoCentral.style.height = '60px';
-        mapaCanvas.appendChild(nodoCentral);
-        
-        // Crear SVG para las conexiones
+        // Create SVG for lines
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('width', '100%');
         svg.setAttribute('height', '100%');
         svg.style.position = 'absolute';
         svg.style.top = '0';
         svg.style.left = '0';
-        mapaCanvas.appendChild(svg);
+        svg.style.zIndex = '1';
+        svg.style.pointerEvents = 'none';
+        canvas.appendChild(svg);
         
-        // Crear los nodos secundarios
+        // Create central node
+        const nodoCentral = document.createElement('div');
+        nodoCentral.className = 'nodo nodo-central';
+        nodoCentral.textContent = filosofia.concepto;
+        nodoCentral.style.width = '180px';
+        nodoCentral.style.height = '60px';
+        nodoCentral.style.left = '250px';
+        nodoCentral.style.top = '50px';
+        nodoCentral.style.zIndex = '2';
+        canvas.appendChild(nodoCentral);
+        
+        // Create secondary nodes
         filosofia.nodos.forEach(nodo => {
             const nodoElement = document.createElement('div');
             nodoElement.className = 'nodo nodo-secundario';
             nodoElement.textContent = nodo.texto;
-            nodoElement.style.left = `${nodo.x}px`;
-            nodoElement.style.top = `${nodo.y}px`;
-            nodoElement.style.width = `${nodo.ancho}px`;
-            nodoElement.style.height = `${nodo.alto}px`;
-            mapaCanvas.appendChild(nodoElement);
+            nodoElement.style.width = nodo.ancho + 'px';
+            nodoElement.style.height = nodo.alto + 'px';
+            nodoElement.style.left = nodo.x + 'px';
+            nodoElement.style.top = nodo.y + 'px';
+            nodoElement.style.zIndex = '2';
+            canvas.appendChild(nodoElement);
         });
         
-        // Crear las conexiones
-        filosofia.conexiones.forEach(conexion => {
-            let sourceX, sourceY, targetX, targetY;
-            
-            if (conexion.desde === 0) {
-                sourceX = 250 + 90;
-                sourceY = 30 + 30;
-            } else {
-                const nodoDesde = filosofia.nodos.find(n => n.id === conexion.desde);
-                if (nodoDesde) {
-                    sourceX = nodoDesde.x + (nodoDesde.ancho / 2);
-                    sourceY = nodoDesde.y + (nodoDesde.alto / 2);
-                } else {
-                    return; // Skip this connection if source node not found
-                }
-            }
-            
-            const nodoHasta = filosofia.nodos.find(n => n.id === conexion.hasta);
-            if (!nodoHasta) return; // Skip this connection if target node not found
-            
-            targetX = nodoHasta.x + (nodoHasta.ancho / 2);
-            targetY = nodoHasta.y + (nodoHasta.alto / 2);
-            
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', sourceX);
-            line.setAttribute('y1', sourceY);
-            line.setAttribute('x2', targetX);
-            line.setAttribute('y2', targetY);
-            line.setAttribute('stroke', htmlElement.getAttribute('data-theme') === 'dark' ? '#aaa' : colores.oscuro);
-            line.setAttribute('stroke-width', '2');
-            svg.appendChild(line);
-        });
-        
-        // Crear sección de pensadores
+        // Create thinkers section
         const pensadoresSection = document.createElement('div');
         pensadoresSection.className = 'pensadores';
         
         const pensadoresTitle = document.createElement('h3');
         pensadoresTitle.textContent = 'Pensadores principales:';
-        pensadoresTitle.style.color = colores.rojo;
-        pensadoresTitle.style.fontWeight = 'bold';
-        pensadoresSection.appendChild(pensadoresTitle);
         
         const pensadoresList = document.createElement('p');
         pensadoresList.textContent = filosofia.pensadores.join(', ');
+        
+        pensadoresSection.appendChild(pensadoresTitle);
         pensadoresSection.appendChild(pensadoresList);
         
+        // Append all elements to the container
+        mapaContainer.appendChild(header);
+        mapaContainer.appendChild(descripcion);
+        mapaContainer.appendChild(canvas);
         mapaContainer.appendChild(pensadoresSection);
+        
+        // Draw connections after nodes are positioned
+        setTimeout(() => {
+            // Draw connections
+            filosofia.conexiones.forEach(conexion => {
+                const sourceNode = conexion.desde === 0 ? nodoCentral : canvas.querySelectorAll('.nodo-secundario')[conexion.desde - 1];
+                const targetNode = canvas.querySelectorAll('.nodo-secundario')[conexion.hasta - 1];
+                
+                const sourceRect = sourceNode.getBoundingClientRect();
+                const targetRect = targetNode.getBoundingClientRect();
+                const canvasRect = canvas.getBoundingClientRect();
+                
+                const sourceX = (sourceRect.left + sourceRect.right) / 2 - canvasRect.left;
+                const sourceY = (sourceRect.top + sourceRect.bottom) / 2 - canvasRect.top;
+                const targetX = (targetRect.left + targetRect.right) / 2 - canvasRect.left;
+                const targetY = (targetRect.top + targetRect.bottom) / 2 - canvasRect.top;
+                
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', sourceX);
+                line.setAttribute('y1', sourceY);
+                line.setAttribute('x2', targetX);
+                line.setAttribute('y2', targetY);
+                line.setAttribute('stroke', htmlElement.getAttribute('data-theme') === 'dark' ? '#aaa' : colores.oscuro);
+                line.setAttribute('stroke-width', '2');
+                svg.appendChild(line);
+            });
+            
+            // Adjust for mobile if needed
+            if (window.innerWidth <= 768) {
+                adjustNodePositionsForMobile(canvas);
+            }
+        }, 50);
     }
     
     // Permitir generar mapa al presionar Enter en el input
@@ -448,4 +452,71 @@ document.addEventListener('DOMContentLoaded', function() {
             generarBtn.click();
         }
     });
+    
+    // Add resize listener to adjust when orientation changes
+    window.addEventListener('resize', function() {
+        if (!mapaContainer.classList.contains('hidden')) {
+            const canvas = document.getElementById('mapa-canvas');
+            if (canvas) {
+                adjustNodePositionsForMobile(canvas);
+            }
+        }
+    });
+});
+
+// Add this function to your script.js file
+function adjustNodePositionsForMobile() {
+    const isMobile = window.innerWidth <= 768;
+    const isSmallMobile = window.innerWidth <= 480;
+    
+    if (isMobile) {
+        // Get all nodes
+        const nodes = document.querySelectorAll('.nodo');
+        
+        // Apply scaling factor to node positions
+        const scaleFactor = isSmallMobile ? 0.7 : 0.8;
+        const centerX = 250;
+        const centerOffset = isSmallMobile ? 50 : 30;
+        
+        nodes.forEach(node => {
+            // Get current position
+            const currentLeft = parseInt(node.style.left);
+            const currentTop = parseInt(node.style.top);
+            
+            // Center and scale positions
+            if (!isNaN(currentLeft) && !isNaN(currentTop)) {
+                // Adjust positions to be more centered on mobile
+                const adjustedLeft = centerX - centerOffset + (currentLeft - centerX) * scaleFactor;
+                const adjustedTop = currentTop * scaleFactor;
+                
+                // Apply new positions
+                node.style.left = `${adjustedLeft}px`;
+                node.style.top = `${adjustedTop}px`;
+                
+                // Reduce width for better fit
+                const currentWidth = parseInt(node.style.width);
+                if (!isNaN(currentWidth)) {
+                    node.style.width = `${currentWidth * scaleFactor}px`;
+                }
+            }
+        });
+        
+        // Redraw connections after repositioning nodes
+        redrawConnections(canvas);
+    }
+}
+
+// Modify your generarMapa function to call this at the end
+function generarMapa(filosofia) {
+    // After creating all nodes and connections
+    if (window.innerWidth <= 768) {
+        adjustNodePositionsForMobile();
+    }
+}
+
+// Also add a resize listener to adjust when orientation changes
+window.addEventListener('resize', function() {
+    if (!document.getElementById('mapa-container').classList.contains('hidden')) {
+        adjustNodePositionsForMobile();
+    }
 });

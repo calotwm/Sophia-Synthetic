@@ -178,6 +178,7 @@ input::placeholder {
     margin-top: 2rem;
     box-shadow: 0 4px 8px var(--shadow-color);
     transition: background-color 0.3s ease;
+    overflow-x: hidden;
 }
 
 .mapa-titulo {
@@ -199,6 +200,17 @@ input::placeholder {
     margin-bottom: 1rem;
     box-shadow: inset 0 0 5px var(--shadow-color);
     transition: background-color 0.3s ease;
+    overflow: visible;
+}
+
+.mapa-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
 }
 
 .nodo {
@@ -212,6 +224,7 @@ input::placeholder {
     font-size: 0.9rem;
     box-shadow: 0 2px 4px var(--shadow-color);
     transition: transform 0.2s ease, background-color 0.3s ease, color 0.3s ease;
+    z-index: 2;
 }
 
 .nodo:hover {
@@ -268,5 +281,55 @@ footer {
     .theme-btn {
         position: relative;
         margin: 1rem auto 0;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+    
+    .subtitle {
+        font-size: 1rem;
+    }
+    
+    .container {
+        padding: 1rem;
+    }
+    
+    .mapa-canvas {
+        height: 600px;
+        min-height: 600px;
+    }
+    
+    #mapa-container {
+        padding: 1rem;
+    }
+    
+    .nodo {
+        font-size: 0.75rem;
+        padding: 0.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    .mapa-canvas {
+        height: 900px;
+        min-height: 900px;
+    }
+    
+    .nodo {
+        font-size: 0.7rem;
+        padding: 0.25rem;
+    }
+    
+    .mapa-titulo {
+        font-size: 1.3rem;
+    }
+    
+    .mapa-descripcion {
+        font-size: 0.9rem;
     }
 }
